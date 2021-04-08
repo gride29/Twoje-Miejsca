@@ -1,5 +1,7 @@
 const { v4: uuidv4 } = require('uuid');
 
+const { validationResult } = require('express-validator');
+
 const HttpError = require('../models/http-error');
 
 let TEMPORARY_PLACES = [
@@ -41,22 +43,28 @@ const getPlaceById = (req, res, next) => {
 	res.json({ place });
 };
 
-const getPlaceByUserId = (req, res, next) => {
+const getPlacesByUserId = (req, res, next) => {
 	const userId = req.params.uid;
-	const place = TEMPORARY_PLACES.find((place) => {
+	const places = TEMPORARY_PLACES.filter((place) => {
 		return place.creator === userId;
 	});
 
-	if (!place) {
+	if (!places || places.length === 0) {
 		return next(
-			new HttpError('Nie znaleziono miejsca dla podanego użytkownika.', 404)
+			new HttpError('Nie znaleziono miejsc dla podanego użytkownika.', 404)
 		);
 	}
 
-	res.json({ place });
+	res.json({ places });
 };
 
 const createPlace = (req, res, next) => {
+	const errors = validationResult(req);
+
+	if (!errors.isEmpty()) {
+		throw new HttpError('Wprowadzone dane są niewłaściwe!');
+	}
+
 	const { title, description, coordinates, address, creator } = req.body;
 
 	const createdPlace = {
@@ -74,6 +82,12 @@ const createPlace = (req, res, next) => {
 };
 
 const updatePlace = (req, res, next) => {
+	const errors = validationResult(req);
+
+	if (!errors.isEmpty()) {
+		throw new HttpError('Wprowadzone dane są niewłaściwe!');
+	}
+
 	const { title, description } = req.body;
 	const placeId = req.params.pid;
 
@@ -95,12 +109,17 @@ const updatePlace = (req, res, next) => {
 
 const deletePlace = (req, res, next) => {
 	const placeId = req.params.pid;
+
+	if (!TEMPORARY_PLACES.find((place) => place.id === placeId)) {
+		throw new HttpError('Nie znaleziono miejsca o podanym ID.', 404);
+	}
+
 	TEMPORARY_PLACES = TEMPORARY_PLACES.filter((place) => place.id !== placeId);
 	res.status(200).json({ message: 'Usunięto miejsce.' });
 };
 
 exports.getPlaceById = getPlaceById;
-exports.getPlaceByUserId = getPlaceByUserId;
+exports.getPlacesByUserId = getPlacesByUserId;
 exports.createPlace = createPlace;
 exports.updatePlace = updatePlace;
 exports.deletePlace = deletePlace;
