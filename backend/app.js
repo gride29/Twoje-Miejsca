@@ -6,6 +6,8 @@ const placesRoutes = require('./routes/places-routes');
 const userRoutes = require('./routes/users-routes');
 const HttpError = require('./models/http-error');
 
+const { MONGODB } = require('./config.js');
+
 const app = express();
 
 app.use(bodyParser.json());
@@ -27,9 +29,7 @@ app.use((error, req, res, next) => {
 });
 
 mongoose
-	.connect(
-		'mongodb+srv://gride:9VyKsZCA3G2RJwpN@cluster1.qec8u.mongodb.net/places?retryWrites=true&w=majority'
-	)
+	.connect(MONGODB)
 	.then(() => {
 		app.listen(5000);
 		console.log('MongoDB connected!');
