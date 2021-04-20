@@ -2,6 +2,7 @@ const { v4: uuidv4 } = require('uuid');
 const { validationResult } = require('express-validator');
 
 const HttpError = require('../models/http-error');
+const User = require('../models/user');
 
 const TEMPORARY_USERS = [
 	{
@@ -18,54 +19,83 @@ const TEMPORARY_USERS = [
 	},
 ];
 
-const getUsers = (req, res, next) => {
-	res.json({ users: TEMPORARY_USERS });
+const getUsers = async (req, res, next) => {
+	let users;
+	try {
+		users = await User.find({}, '-password');
+	} catch (err) {
+		const error = new HttpError(
+			'Nie udało się pobrać listy użytkowników.',
+			500
+		);
+		return next(error);
+	}
+	res.json({ users: users.map((user) => user.toObject({ getters: true })) });
 };
 
-const signup = (req, res, next) => {
+const signup = async (req, res, next) => {
 	const errors = validationResult(req);
 
 	if (!errors.isEmpty()) {
-		throw new HttpError('Wprowadzone dane są niewłaściwe!');
+		const error = new HttpError('Wprowadzone dane są niewłaściwe!');
+		return next(error);
 	}
 
-	const { name, email, password } = req.body;
+	const { name, email, password, places } = req.body;
 
-	const hasUser = TEMPORARY_USERS.find((user) => {
-		return user.email === email;
-	});
-
-	if (hasUser) {
-		throw new HttpError(
-			'Nie udało się zarejestrować, użytkownik o podanym adresie email już istnieje.',
-			422
+	let existingUser;
+	try {
+		existingUser = await User.findOne({ email: email });
+	} catch (err) {
+		const error = new HttpError(
+			'Nie udało się zarejestrować użytkownika, spróbuj ponownie.',
+			500
 		);
+		return next(error);
 	}
 
-	const createdUser = {
-		id: uuidv4(),
+	if (existingUser) {
+		const error = new HttpError('Użytkownik już istnieje.', 500);
+		return next(error);
+	}
+
+	const createdUser = new User({
 		name,
 		email,
+		image: 'https://semantic-ui.com/images/avatar2/small/matthew.png',
 		password,
-	};
-
-	TEMPORARY_USERS.push(createdUser);
-	res.status(201).json({ user: createdUser });
-};
-
-const login = (req, res, next) => {
-	const { email, password } = req.body;
-
-	const identifiedUser = TEMPORARY_USERS.find((user) => {
-		return user.email === email;
+		places: [],
 	});
 
-	if (!identifiedUser || identifiedUser.password !== password) {
-		throw new HttpError(
-			'Nie znaleziono użytkownika o podanym adresie email i haśle.',
-			401
-		);
+	try {
+		await createdUser.save();
+	} catch (err) {
+		const error = new HttpError('Nie udało się utworzyć użytkownika.', 500);
+		return next(error);
 	}
+
+	res.status(201).json({ user: createdUser.toObject({ getters: true }) });
+};
+
+const login = async (req, res, next) => {
+	const { email, password } = req.body;
+
+	let existingUser;
+	try {
+		existingUser = await User.findOne({ email: email });
+	} catch (err) {
+		const error = new HttpError(
+			'Nie udało się zalogować, spróbuj ponownie.',
+			500
+		);
+		return next(error);
+	}
+
+	if (!existingUser || existingUser.password !== password) {
+		const error = new HttpError('Podany email lub hasło są nieprawidłowe.');
+		return next(error);
+	}
+
 	res.json({ message: 'Zalogowano!' });
 };
 

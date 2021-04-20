@@ -1,8 +1,7 @@
 const { v4: uuidv4 } = require('uuid');
-
 const { validationResult } = require('express-validator');
-
 const HttpError = require('../models/http-error');
+const Place = require('../models/place');
 
 let TEMPORARY_PLACES = [
 	{
@@ -30,32 +29,49 @@ let TEMPORARY_PLACES = [
 	},
 ];
 
-const getPlaceById = (req, res, next) => {
+const getPlaceById = async (req, res, next) => {
 	const placeId = req.params.pid;
-	const place = TEMPORARY_PLACES.find((place) => {
-		return place.id === placeId;
-	});
+
+	let place;
+
+	try {
+		place = await Place.findById(placeId);
+	} catch (err) {
+		const error = new HttpError('Coś poszło nie tak, spróbuj ponownie.', 500);
+		return next(error);
+	}
 
 	if (!place) {
-		return next(new HttpError('Nie znaleziono miejsca o podanym ID.', 404));
+		const error = new HttpError('Nie znaleziono miejsca o podanym ID.', 404);
+		return next(error);
 	}
 
-	res.json({ place });
+	res.json({ place: place.toObject({ getters: true }) });
 };
 
-const getPlacesByUserId = (req, res, next) => {
+const getPlacesByUserId = async (req, res, next) => {
 	const userId = req.params.uid;
-	const places = TEMPORARY_PLACES.filter((place) => {
-		return place.creator === userId;
-	});
 
-	if (!places || places.length === 0) {
-		return next(
-			new HttpError('Nie znaleziono miejsc dla podanego użytkownika.', 404)
-		);
+	let places;
+
+	try {
+		places = await Place.find({ creator: userId });
+	} catch (err) {
+		const error = new HttpError('Coś poszło nie tak, spróbuj ponownie.', 500);
+		return next(error);
 	}
 
-	res.json({ places });
+	if (!places || places.length === 0) {
+		const error = new HttpError(
+			'Nie znaleziono miejsc dla podanego użytkownika.',
+			404
+		);
+		return next(error);
+	}
+
+	res.json({
+		places: places.map((place) => place.toObject({ getters: true })),
+	});
 };
 
 const createPlace = (req, res, next) => {
@@ -67,21 +83,29 @@ const createPlace = (req, res, next) => {
 
 	const { title, description, coordinates, address, creator } = req.body;
 
-	const createdPlace = {
-		id: uuidv4(),
+	const createdPlace = new Place({
 		title,
 		description,
-		location: coordinates,
 		address,
+		location: coordinates,
+		image:
+			'https://upload.wikimedia.org/wikipedia/commons/c/c7/Empire_State_Building_from_the_Top_of_the_Rock.jpg',
 		creator,
-	};
+	});
 
-	TEMPORARY_PLACES.push(createdPlace);
+	try {
+		createdPlace.save();
+	} catch (err) {
+		const error = new HttpError(
+			'Nie udało się utworzyć miejsca, spróbuj ponownie.'
+		);
+		return next(error);
+	}
 
 	res.status(201).json({ place: createdPlace });
 };
 
-const updatePlace = (req, res, next) => {
+const updatePlace = async (req, res, next) => {
 	const errors = validationResult(req);
 
 	if (!errors.isEmpty()) {
@@ -91,30 +115,46 @@ const updatePlace = (req, res, next) => {
 	const { title, description } = req.body;
 	const placeId = req.params.pid;
 
-	const updatedPlace = {
-		...TEMPORARY_PLACES.find((place) => place.id === placeId),
-	};
+	let place;
 
-	const placeIndex = TEMPORARY_PLACES.findIndex(
-		(place) => place.id === placeId
-	);
-
-	updatedPlace.title = title;
-	updatedPlace.description = description;
-
-	TEMPORARY_PLACES[placeIndex] = updatedPlace;
-
-	res.status(200).json({ place: updatedPlace });
-};
-
-const deletePlace = (req, res, next) => {
-	const placeId = req.params.pid;
-
-	if (!TEMPORARY_PLACES.find((place) => place.id === placeId)) {
-		throw new HttpError('Nie znaleziono miejsca o podanym ID.', 404);
+	try {
+		place = await Place.findById(placeId);
+	} catch (err) {
+		const error = new HttpError('Coś poszło nie tak, spróbuj ponownie.', 500);
+		return next(error);
 	}
 
-	TEMPORARY_PLACES = TEMPORARY_PLACES.filter((place) => place.id !== placeId);
+	place.title = title;
+	place.description = description;
+
+	try {
+		await place.save();
+	} catch (err) {
+		const error = new HttpError('Coś poszło nie tak, spróbuj ponownie.', 500);
+		return next(error);
+	}
+
+	res.status(200).json({ place: place.toObject({ getters: true }) });
+};
+
+const deletePlace = async (req, res, next) => {
+	const placeId = req.params.pid;
+
+	let place;
+	try {
+		place = Place.findById(placeId);
+	} catch (err) {
+		const error = new HttpError('Coś poszło nie tak, spróbuj ponownie.', 500);
+		return next(error);
+	}
+
+	try {
+		await place.remove();
+	} catch (err) {
+		const error = new HttpError('Coś poszło nie tak, spróbuj ponownie.', 500);
+		return next(error);
+	}
+
 	res.status(200).json({ message: 'Usunięto miejsce.' });
 };
 
