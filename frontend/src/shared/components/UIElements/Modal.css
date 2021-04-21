@@ -20,11 +20,12 @@
 }
 
 .modal__content {
-	padding: 1rem 0.5rem;
+	padding: 1rem 1rem;
 }
 
 .modal__footer {
 	padding: 1rem 0.5rem;
+	text-align: right;
 }
 
 @media (min-width: 768px) {
