@@ -22,6 +22,7 @@ app.use((req, res, next) => {
 
 app.use((error, req, res, next) => {
 	if (res.headerSent) {
+		v;
 		return next(error);
 	}
 	res.status(error.code || 500);

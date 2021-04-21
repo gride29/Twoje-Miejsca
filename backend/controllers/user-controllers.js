@@ -4,21 +4,6 @@ const { validationResult } = require('express-validator');
 const HttpError = require('../models/http-error');
 const User = require('../models/user');
 
-const TEMPORARY_USERS = [
-	{
-		id: 'uzytkownik1',
-		name: 'Tomasz Kowalski',
-		email: 'tomasz@test.com',
-		password: 'test',
-	},
-	{
-		id: 'uzytkownik2',
-		name: 'Jan Nowak',
-		email: 'jan@test.com',
-		password: '1234',
-	},
-];
-
 const getUsers = async (req, res, next) => {
 	let users;
 	try {
@@ -41,7 +26,7 @@ const signup = async (req, res, next) => {
 		return next(error);
 	}
 
-	const { name, email, password, places } = req.body;
+	const { name, email, password } = req.body;
 
 	let existingUser;
 	try {
