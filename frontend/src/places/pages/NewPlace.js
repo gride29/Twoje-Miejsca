@@ -12,6 +12,8 @@ import { AuthContext } from '../../shared/context/auth-context';
 import ErrorModal from '../../shared/components/UIElements/ErrorModal';
 import LoadingSpinner from '../../shared/components/UIElements/LoadingSpinner';
 import { useHistory } from 'react-router-dom';
+import ImageUpload from '../../shared/components/FormElements/ImageUpload';
+import { serialize } from 'object-to-formdata';
 
 const NewPlace = () => {
 	const { isLoading, error, sendRequest, clearError } = useHttpClient();
@@ -31,6 +33,10 @@ const NewPlace = () => {
 			value: '',
 			isValid: false,
 		},
+		image: {
+			value: null,
+			isValid: false,
+		},
 		lat: {
 			value: '',
 			isValid: false,
@@ -46,23 +52,21 @@ const NewPlace = () => {
 	const placeSubmitHandler = async (event) => {
 		event.preventDefault();
 		try {
-			await sendRequest(
-				'http://localhost:5000/api/places',
-				'POST',
-				JSON.stringify({
-					title: formState.inputs.title.value,
-					description: formState.inputs.description.value,
-					address: formState.inputs.address.value,
-					coordinates: {
-						lat: formState.inputs.lat.value,
-						lng: formState.inputs.lng.value,
-					},
-					creator: auth.userId,
-				}),
-				{
-					'Content-Type': 'application/json',
-				}
-			);
+			const data = {
+				title: formState.inputs.title.value,
+				description: formState.inputs.description.value,
+				address: formState.inputs.address.value,
+				coordinates: {
+					lat: formState.inputs.lat.value,
+					lng: formState.inputs.lng.value,
+				},
+				image: formState.inputs.image.value,
+				creator: auth.userId,
+			};
+
+			const formData = serialize(data);
+
+			await sendRequest('http://localhost:5000/api/places', 'POST', formData);
 			history.push('/');
 		} catch (err) {}
 	};
@@ -96,6 +100,11 @@ const NewPlace = () => {
 					validators={[VALIDATOR_REQUIRE()]}
 					errorText="Proszę o wpisanie poprawnego adresu"
 					onInput={inputHandler}
+				/>
+				<ImageUpload
+					id="image"
+					onInput={inputHandler}
+					errorText="Proszę o dodanie zdjęcia."
 				/>
 				<Input
 					id="lat"

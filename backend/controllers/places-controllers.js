@@ -1,3 +1,4 @@
+const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const { validationResult } = require('express-validator');
 const mongoose = require('mongoose');
@@ -66,8 +67,7 @@ const createPlace = async (req, res, next) => {
 		description,
 		address,
 		location: coordinates,
-		image:
-			'https://upload.wikimedia.org/wikipedia/commons/c/c7/Empire_State_Building_from_the_Top_of_the_Rock.jpg',
+		image: req.file.path,
 		creator,
 	});
 
@@ -101,6 +101,7 @@ const createPlace = async (req, res, next) => {
 		const error = new HttpError(
 			'Nie udało się utworzyć miejsca, spróbuj ponownie.'
 		);
+		console.log(err);
 		return next(error);
 	}
 
@@ -155,6 +156,8 @@ const deletePlace = async (req, res, next) => {
 		return next(error);
 	}
 
+	const imagePath = place.image;
+
 	try {
 		const sess = await mongoose.startSession();
 		sess.startTransaction();
@@ -166,6 +169,11 @@ const deletePlace = async (req, res, next) => {
 		const error = new HttpError('Coś poszło nie tak, spróbuj ponownie.', 500);
 		return next(error);
 	}
+
+	// Remove the image.
+	fs.unlink(imagePath, (err) => {
+		console.log(err);
+	});
 
 	res.status(200).json({ message: 'Usunięto miejsce.' });
 };

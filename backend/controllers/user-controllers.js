@@ -47,7 +47,7 @@ const signup = async (req, res, next) => {
 	const createdUser = new User({
 		name,
 		email,
-		image: 'https://semantic-ui.com/images/avatar2/small/matthew.png',
+		image: req.file.path,
 		password,
 		places: [],
 	});

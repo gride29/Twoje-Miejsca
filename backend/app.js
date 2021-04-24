@@ -1,3 +1,5 @@
+const fs = require('fs');
+const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
@@ -11,6 +13,9 @@ const { MONGODB } = require('./config.js');
 const app = express();
 
 app.use(bodyParser.json());
+
+// Access files from uploads/images in http://localhost:5000/${props.image}.
+app.use('/uploads/images', express.static(path.join('uploads', 'images')));
 
 app.use((req, res, next) => {
 	// CORS Policy
@@ -32,6 +37,12 @@ app.use((req, res, next) => {
 });
 
 app.use((error, req, res, next) => {
+	if (req.file) {
+		// Remove image
+		fs.unlink(req.file.path, (err) => {
+			console.log(err);
+		});
+	}
 	if (res.headerSent) {
 		v;
 		return next(error);

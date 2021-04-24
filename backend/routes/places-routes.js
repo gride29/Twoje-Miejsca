@@ -1,6 +1,6 @@
 const express = require('express');
 const { check } = require('express-validator');
-
+const fileUpload = require('../middleware/file-upload');
 const HttpError = require('../models/http-error');
 
 const placesControllers = require('../controllers/places-controllers');
@@ -13,6 +13,7 @@ router.get('/user/:uid', placesControllers.getPlacesByUserId);
 
 router.post(
 	'/',
+	fileUpload.single('image'),
 	[
 		check('title').not().isEmpty(),
 		check('description').isLength({ min: 5 }),
