@@ -81,7 +81,7 @@ const Auth = () => {
 						'Content-Type': 'application/json',
 					}
 				);
-				auth.login(responseData.user.id);
+				auth.login(responseData.userId, responseData.token);
 			} catch (err) {}
 		} else {
 			try {
@@ -95,7 +95,7 @@ const Auth = () => {
 					'POST',
 					formData
 				);
-				auth.login(responseData.user.id);
+				auth.login(responseData.userId, responseData.token);
 			} catch (err) {}
 		}
 	};
@@ -121,12 +121,7 @@ const Auth = () => {
 					/>
 				)}
 				{!isLoginMode && (
-					<ImageUpload
-						center
-						id="image"
-						onInput={inputHandler}
-						errorText="Proszę o dodanie zdjęcia."
-					/>
+					<ImageUpload center id="image" onInput={inputHandler} />
 				)}
 				<Input
 					id="email"

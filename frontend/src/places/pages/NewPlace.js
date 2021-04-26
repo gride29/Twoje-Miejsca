@@ -66,7 +66,9 @@ const NewPlace = () => {
 
 			const formData = serialize(data);
 
-			await sendRequest('http://localhost:5000/api/places', 'POST', formData);
+			await sendRequest('http://localhost:5000/api/places', 'POST', formData, {
+				Authorization: 'Bearer ' + auth.token,
+			});
 			history.push('/');
 		} catch (err) {}
 	};
