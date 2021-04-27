@@ -51,12 +51,12 @@ const ImageUpload = (props) => {
 				onChange={pickedHandler}
 			/>
 			<div className={`image-upload ${props.center && 'center'}`}>
-				<div className="image-upload__preview">
+				<div className={`image-upload__preview${props.wider || ''}`}>
 					{previewUrl && <img src={previewUrl} alt="Podgląd" />}
-					{!previewUrl && <p>Proszę o wybór avatara.</p>}
+					{!previewUrl && <p>Proszę o wybór zdjęcia.</p>}
 				</div>
 				<Button size="differentMargin" type="button" onClick={pickImageHandler}>
-					Wybierz avatar
+					Wybierz zdjęcie
 				</Button>
 			</div>
 			{!isValid && <p>{props.errorText}</p>}

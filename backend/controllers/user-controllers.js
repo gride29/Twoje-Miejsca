@@ -118,7 +118,7 @@ const login = async (req, res, next) => {
 	if (!isValidPassword) {
 		const error = new HttpError(
 			'Podany email lub hasło są nieprawidłowe.',
-			401
+			403
 		);
 		return next(error);
 	}

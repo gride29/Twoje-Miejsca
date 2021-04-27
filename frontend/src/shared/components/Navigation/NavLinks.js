@@ -31,7 +31,7 @@ const NavLinks = (props) => {
 			{!auth.isLoggedIn && (
 				<li>
 					<NavLink to="/auth" exact>
-						UWIERZYTELNIJ
+						ZALOGUJ SIĘ
 					</NavLink>
 				</li>
 			)}

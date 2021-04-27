@@ -127,6 +127,14 @@ const updatePlace = async (req, res, next) => {
 		return next(error);
 	}
 
+	if (place.creator.toString() !== req.userData.userId) {
+		const error = new HttpError(
+			'Nie masz uprawnień do edycji tego miejsca.',
+			401
+		);
+		return next(error);
+	}
+
 	place.title = title;
 	place.description = description;
 
@@ -153,6 +161,14 @@ const deletePlace = async (req, res, next) => {
 
 	if (!place) {
 		const error = new HttpError('Nie znaleziono miejsca o podanym id.', 404);
+		return next(error);
+	}
+
+	if (place.creator.id.toString() !== req.userData.userId) {
+		const error = new HttpError(
+			'Nie masz uprawnień do usunięcia tego miejsca.',
+			401
+		);
 		return next(error);
 	}
 

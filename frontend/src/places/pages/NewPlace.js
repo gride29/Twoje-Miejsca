@@ -103,11 +103,7 @@ const NewPlace = () => {
 					errorText="Proszę o wpisanie poprawnego adresu"
 					onInput={inputHandler}
 				/>
-				<ImageUpload
-					id="image"
-					onInput={inputHandler}
-					errorText="Proszę o dodanie zdjęcia."
-				/>
+				<ImageUpload center id="image" wider="__wide" onInput={inputHandler} />
 				<Input
 					id="lat"
 					type="number"
