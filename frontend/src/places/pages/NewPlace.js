@@ -61,7 +61,6 @@ const NewPlace = () => {
 					lng: formState.inputs.lng.value,
 				},
 				image: formState.inputs.image.value,
-				creator: auth.userId,
 			};
 
 			const formData = serialize(data);
