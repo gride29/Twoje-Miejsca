@@ -1,6 +1,6 @@
 # TwojeMiejsca
 
-App for sharing places with other users.
+App for sharing places with other users. You will need to register and login to test it out. 
 
 # Live demo
 
